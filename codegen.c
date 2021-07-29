@@ -128,7 +128,7 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
   
   }
   
-  printf("CODE INDEX: %d\n", code_index);
+  //printf("CODE INDEX: %d\n", code_index);
   symbols[proc_index].val = code_index;
   
   //printf("%d\n", code[0].m)
@@ -159,6 +159,16 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
           sym_temp = i;
           break;
         }
+        
+        else if(symbols[i].level < lex_level)
+        {
+          sym_temp = i;
+        
+        }
+        
+        else 
+          continue;
+        
       }
       
       else
@@ -189,6 +199,16 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
           sym_temp = i;
           break;
         }
+        
+        else if(symbols[i].level < lex_level)
+        {
+        
+          sym_temp = i;
+        }
+        
+        else 
+          continue;
+        
       }
       
       else
@@ -228,9 +248,10 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
   else if(tokens[tok_index].type == readsym)
   {
     tok_index++;
+    int sym_temp = 0;
     for(int i = 0; i < sizeof(symbols); i++)
     {
-      int sym_temp;
+      
       if(symbols[i].kind == 2 && strcmp(tokens[tok_index].name, symbols[i].name) == 0 && symbols[i].mark == 0)
       {
         if(symbols[i].level == lex_level)
@@ -239,17 +260,26 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
           break;
         }
         
-        else if(symbols[i].level > i && symbols[i].level < lex_level)
+        else if(symbols[i].level < lex_level)
         {
           sym_temp = i;
         }
+        
+        else
+          continue;
       
       }
     
     }
+    
+    tok_index++;
+    
+    emit(9, 0, 2);
+    emit(4, lex_level - symbols[sym_temp].level, symbols[sym_temp].addr);
   
   }
   
+  //Jack is working on it
   else if(tokens[tok_index].type == ifsym)
   {
     printf("hello");
@@ -258,8 +288,21 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
   
   else if(tokens[tok_index].type == whilesym)
   {
-  
-    printf("hello");
+    tok_index++;
+    int jmp_index = code_index;
+    CONDITION(lex_level, tokens, symbols);
+    tok_index++;
+    
+    int jpc_index = code_index;
+    
+    //JPC
+    emit(8, 0, 0);
+    
+    STATEMENT(lex_level, tokens, symbols);
+    
+    //JMP
+    emit(7, 0, jmp_index *3);
+    code[jpc_index].m = code_index;
   
   }
 
@@ -419,11 +462,6 @@ void FACTOR(lexeme *tokens, symbol *symbols, int lex_level)
        //printf("HiHi\n");
         if((symbols[i].kind == 2 || symbols[i].kind == 1) && strcmp(tokens[tok_index].name, symbols[i].name) == 0 && symbols[i].mark == 0)
         {
-          /*
-          printf("HOLD IT!\n");
-          printf("LEVEL: %d\n", lex_level);
-          printf("AT: %d\n", symbols[i].level);
-          */
           if(symbols[i].level == lex_level)
           {
             //printf("Check me: %d\n", i);
@@ -431,7 +469,19 @@ void FACTOR(lexeme *tokens, symbol *symbols, int lex_level)
             break;
           }
           
+          else if(symbols[i].level < lex_level)
+          {
+            temp = i;
+          
+          }
+          
+          else
+            continue;
+          
         }
+        
+        else
+          continue;
     }
     
     //printf("Index: %d\n", temp);
