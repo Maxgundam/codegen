@@ -18,7 +18,13 @@ void emit(int op, int L, int M);
 void expression();
 void PROGRAM(lexeme *tokens, symbol *symbols);
 void BLOCK(int lex_level,lexeme *tokens, symbol *symbols);
-void STATEMENT(int lex_leve, lexeme *tokens, symbol *symbols);
+void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols);
+void CONDITION(int lex_level,lexeme *tokens, symbol *symbols);
+void EXPRESSION(lexeme *tokens, symbol *symbols, int lex_level);
+void EXPRESSION_PRIME(lexeme *tokens, symbol *symbols, int lex_level);
+void TERM(lexeme *tokens, symbol *symbols, int lex_level);
+void TERM_PRIME(lexeme *tokens, symbol *symbols, int lex_level);
+void FACTOR(lexeme *tokens, symbol *symbols, int lex_level);
 
 instruction *generate_code(lexeme *tokens, symbol *symbols)
 {
@@ -27,19 +33,6 @@ instruction *generate_code(lexeme *tokens, symbol *symbols)
   tok_index = 0;
   sym_index = 0;
   
-  
-  /*
-  for(int i = 0; i < sizeof(symbols); i++)
-  {
-    printf("%d\n", i);
-    printf("Symbol kind %d\n", symbols[i].kind);
-    printf("Symbol name %s\n", symbols[i].name);
-    printf("Symbol value %d\n", symbols[i].val);
-    printf("Symbol level %d\n", symbols[i].level);
-    printf("Symbol addr %d\n", symbols[i].addr);
-    printf("Symbol mark %d\n\n", symbols[i].mark);
-  
-  }*/
   
   PROGRAM(tokens, symbols);
   
@@ -66,8 +59,7 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
   int proc_index = sym_index - 1;
   int numSym = 0;
   int numVars = 0;
-  
-  //ENDLESSLY LOOPING: MUST FIX!!!! DELETE THIS COMMENT LATER.
+
   printf("Jo: %d\n", proc_index);
   
   //CONST_DECLARATION(tokens, symbols)
@@ -135,9 +127,6 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
   
   }
   
-  //printf("The code index is: %d\n", code_index);
-  //printf("the proc_index is: %d\n", proc_index);
-  
   code[proc_index].m = code_index;
   
   //printf("%d\n", code[0].m)
@@ -152,57 +141,253 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
 {
   if(tokens[tok_index].type == identsym)
   {
-   
+    int sym_temp; 
     
+    //THIS FOR LOOP MAY NEED CORRECTION
+    for(int i = 0; i < sizeof(symbols); i++)
+    {
+      if(symbols[i].val == 2 && strcmp(tokens[tok_index].name, symbols[i].name) == 0 && symbols[i].mark == 0)
+      {
+        if(i == lex_level)
+        {
+          sym_temp == i;
+          break;
+        }
+        
+        else if(i < lex_level && i > sym_temp)
+        {
+          sym_temp == i;
+        }
+        
+      }
+      
+    }
+    
+    tok_index++;
+    EXPRESSION(tokens, symbols, lex_level);
+    
+    //STORE
+    emit(4, lex_level - symbols[sym_temp].level, symbols[sym_temp].addr * 3);
   
-  }
-  
+   }
+    
   
   else if(tokens[tok_index].type == callsym)
   {
   
-  
+    printf("Hello");
   }
   
   
   else if(tokens[tok_index].type == beginsym)
   {
-  
-  
-  
+    tok_index++;
+    STATEMENT(lex_level, tokens, symbols);
+    
+    while(tokens[tok_index].type == semicolonsym)
+    {
+      tok_index++;
+      STATEMENT(lex_level, tokens, symbols);
+    
+    }
+    
+    tok_index++;
   }
-  
   
   else if(tokens[tok_index].type == writesym)
   {
   
-  
+    printf("hello");
   }
   
   
   else if(tokens[tok_index].type == readsym)
   {
-  
+    printf("hello");
   
   }
   
   else if(tokens[tok_index].type == ifsym)
   {
-  
+    printf("hello");
   
   }
   
   else if(tokens[tok_index].type == whilesym)
   {
   
-  
+    printf("hello");
   
   }
 
+}
+
+//CONDITION
+void CONDITION(int lex_level, lexeme *tokens, symbol symbols)
+{
+  if(tokens[tok_index].type == oddsym)
+  {
+    tok_index++;
+    EXPRESSION(tokens, symbols, lex_level);
+    emit(2, 0, 6);
+  }
+  
+  else
+  {
+    EXPRESSION(tokens, symbols, lex_level);
+    int relop;
+    
+    relop == tokens[tok_index].type;
+    tok_index++;
+    
+    EXPRESSION(tokens, symbols, lex_level);
+    
+    switch(relop)
+    {
+      case eqlsym:
+        emit(2, 0, 8);
+      
+      case neqsym:
+        emit(2, 0, 9);
+      
+      case lessym:
+        emit(2, 0, 10);
+      
+      case leqsym:
+        emit(2, 0, 11);
+      
+      case gtrsym:
+        emit(2, 0, 12);
+      
+      case geqsym:
+        emit(2, 0, 13);
+      
+    }
+  }
 
 }
 
+//EXPRESSION
+void EXPRESSION(lexeme *tokens, symbol *symbols, int lex_level)
+{
+  if(tokens[tok_index].type == plussym)
+  {
+    tok_index++;
+    TERM(tokens, symbols, lex_level);
+    EXPRESSION_PRIME(tokens, symbols, lex_level);
+  
+  }
 
+}
+
+//EXPRESSION_PRIME
+void EXPRESSION_PRIME(lexeme *tokens, symbol *symbols, int lex_level)
+{
+  if(tokens[tok_index].type == plussym)
+  {
+    tok_index++;
+    TERM(tokens, symbols, lex_level);
+    emit(2, 0, 2);
+    EXPRESSION_PRIME(tokens, symbols, lex_level);
+  }
+
+}
+
+void TERM(lexeme *tokens, symbol *symbols, int lex_level)
+{
+  FACTOR(tokens, symbols, lex_level);
+  TERM_PRIME(tokens, symbols, lex_level);
+}
+
+void TERM_PRIME(lexeme *tokens, symbol *symbols, int lex_level)
+{
+  if(tokens[tok_index].type == multsym)
+  {
+    tok_index++;
+    FACTOR(tokens, symbols, lex_level);
+    
+    emit(2, 0, 4);
+    TERM_PRIME(tokens, symbols, lex_level);
+  }
+  
+  else if(tokens[tok_index].type == slashsym)
+  {
+    tok_index++;
+    FACTOR(tokens, symbols, lex_level);
+    
+    emit(2, 0, 5);
+    TERM_PRIME(tokens, symbols, lex_level);
+    
+  }
+  
+  else if(tokens[tok_index].type == modsym)
+  {
+    tok_index++;
+    FACTOR(tokens, symbols, lex_level);
+    
+    emit(2, 0, 7);
+    TERM_PRIME(tokens, symbols, lex_level);
+    
+  }
+
+}
+
+void FACTOR(lexeme *tokens, symbol *symbols, int lex_level)
+{
+  if(tokens[tok_index].type == identsym)
+  {
+    int sym_temp;
+     for(int i = 0; i < sizeof(symbols); i++)
+     {
+        if((symbols[i].val == 2 || symbols[i].val == 1) && strcmp(tokens[tok_index].name, symbols[i].name) == 0 && symbols[i].mark == 0)
+        {
+          if(i == lex_level)
+          {
+            sym_temp == i;
+            break;
+          }
+        
+          else if(i < lex_level && i > sym_temp)
+          {
+            sym_temp == i;
+          }
+        }
+    }
+    
+     if(symbols[sym_temp].val == 1)
+     {
+       //LIT
+       emit(1, 0, symbols[sym_temp].val);
+     }
+       
+     else if(symbols[sym_temp].val == 2)
+     {
+       //LOD
+       emit(3, lex_level - symbols[sym_index].level, symbols[sym_index].addr);
+     }
+     
+     tok_index++;
+    
+  }
+  
+  else if(tokens[tok_index].type == numbersym)
+  {
+    emit(1, 0, tokens[tok_index].value);
+    tok_index++;
+  }
+  
+  else
+  {
+    tok_index++;
+    EXPRESSION(tokens, symbols, lex_level);
+    tok_index++;
+  
+  }
+   
+  
+  
+  
+}
 
 
 void emit(int op, int L, int M)
