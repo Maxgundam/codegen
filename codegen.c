@@ -150,21 +150,13 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
     //THIS FOR LOOP MAY NEED CORRECTION
     for(int i = 0; i < sizeof(symbols); i++)
     {
-      //printf("Yolo\n");
-      /*
-      printf("%d\n", i);
-      printf("Kind: %d\n", symbols[i].kind);
-      printf("Comparison = %d\n", strcmp(tokens[tok_index].name, symbols[i].name));
-      printf("Mark or unmarked? %d\n", symbols[i].mark);
-      printf("\n");
-      */
       
       if(symbols[i].kind == 2 && strcmp(tokens[tok_index].name, symbols[i].name) == 0 && symbols[i].mark == 0)
       {
         //printf("Yahaha\n");
         if(symbols[i].level == lex_level)
         {
-          sym_temp == i;
+          sym_temp = i;
           break;
         }
       }
@@ -178,15 +170,36 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
     EXPRESSION(tokens, symbols, lex_level);
     
     //Store
-    emit(4, lex_level - symbols[sym_temp].level, symbols[sym_temp].addr * 3);
+    emit(4, lex_level - symbols[sym_temp].level, symbols[sym_temp].addr);
   
    }
     
-  
+  //CALL
   else if(tokens[tok_index].type == callsym)
   {
-  
-    printf("Hello");
+    int sym_temp = 0;
+    tok_index++;
+    for(int i = 0; i < sizeof(symbols); i++)
+    {
+      
+      if(symbols[i].kind == 3 && strcmp(tokens[tok_index].name, symbols[i].name) == 0 && symbols[i].mark == 0)
+      {
+        if(symbols[i].level == lex_level)
+        {
+          sym_temp = i;
+          break;
+        }
+      }
+      
+      else
+        continue;
+    }
+    
+    tok_index++;
+    
+    emit(5, lex_level - symbols[sym_temp].level, symbols[sym_temp].val * 3);
+    
+    
   }
   
   
@@ -203,13 +216,37 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
   
   else if(tokens[tok_index].type == writesym)
   {
-    printf("hello");
+    if(tokens[tok_index].type == writesym)
+    {
+      tok_index++;
+      EXPRESSION(tokens, symbols, lex_level);
+      emit(9, 0, 1);
+    }
   }
   
   
   else if(tokens[tok_index].type == readsym)
   {
-    printf("hello");
+    tok_index++;
+    for(int i = 0; i < sizeof(symbols); i++)
+    {
+      int sym_temp;
+      if(symbols[i].kind == 2 && strcmp(tokens[tok_index].name, symbols[i].name) == 0 && symbols[i].mark == 0)
+      {
+        if(symbols[i].level == lex_level)
+        {
+          sym_temp = i;
+          break;
+        }
+        
+        else if(symbols[i].level > i && symbols[i].level < lex_level)
+        {
+          sym_temp = i;
+        }
+      
+      }
+    
+    }
   
   }
   
