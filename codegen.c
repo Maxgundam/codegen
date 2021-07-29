@@ -282,7 +282,25 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
   //Jack is working on it
   else if(tokens[tok_index].type == ifsym)
   {
-    printf("hello");
+    tok_index++;
+    int jpc_index;
+    int jmp_index;
+    CONDITION(lex_level, tokens, symbols);
+    jpc_index = code_index;
+    emit(8, 0, 0);
+    tok_index++;
+    STATEMENT(lex_level, tokens, symbols);
+    
+    if (tokens[tok_index].type == elsesym) {
+        tok_index++;
+        jmp_index = code_index;
+        emit(7, 0, 0);
+        code[jpc_index].m = code_index * 3;
+        STATEMENT(lex_level, tokens, symbols);
+        code[jmp_index].m = code_index * 3;
+    } else
+        symbols[jpc_index].mark = code_index * 3;
+        
   
   }
   
