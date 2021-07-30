@@ -49,8 +49,11 @@ void PROGRAM(lexeme *tokens, symbol *symbols)
   sym_index++;
   
   emit (7, 0, 0);
+  
+  //PROGRAM ::= BLOCK
   BLOCK(0,tokens, symbols);
   emit (9, 0, 3);
+  
   code[0].m = symbols[0].val * 3;
 
 }
@@ -70,19 +73,23 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
     printf("CONST_DECLARATION\n");
     do
     {
-      printf("Const doing\n");
+      //printf("Const doing\n");
       tok_index++;
+      //printf("One %d\n", tok_index);
+      
       numSym++;
       
       symbols[sym_index].mark = 0;
       
       sym_index++;
       tok_index = tok_index + 3;
+      //printf("Two %d\n", tok_index);
     
     
     }while (tokens[tok_index].type == commasym);
      
      tok_index = tok_index + 1;
+     //printf("three %d\n", tok_index);
   
   }
   
@@ -92,8 +99,10 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
     printf("VAR_DECLARATION\n");
     do
     {
-      printf("Var doing\n");
+      //printf("Var doing\n");
       tok_index++;
+      //printf("four %d\n", tok_index);
+      
       numVars++;
       numSym++;
       
@@ -102,11 +111,13 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
       sym_index++;
       
       tok_index++;
+      //printf("five %d\n", tok_index);
       
     
     }while (tokens[tok_index].type == commasym);
     
     tok_index++;
+    //printf("six %d\n", tok_index);
   
   
   }
@@ -117,8 +128,10 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
     printf("PRODECURE_DECLARATION\n");
     do
     {
-      printf("Doing Procedure\n");
+      //printf("Doing Procedure\n");
       tok_index++;
+      //printf("seven %d\n", tok_index);
+      
       numSym++;
       
       //Unmark procedure
@@ -126,12 +139,14 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
       sym_index++;
       
       tok_index = tok_index + 2;
+      //printf("eight %d\n", tok_index);
       
       BLOCK(lex_level + 1, tokens, symbols);
       
       emit(2, 0, 0);
       
       tok_index++;
+      //printf("nine %d\n", tok_index);
     
     }while (tokens[tok_index].type == procsym);
   
@@ -143,6 +158,8 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
   //printf("%d\n", code[0].m)
   
   emit(6, 0, 3 + numVars);
+  
+  //Statement declaration
   STATEMENT(lex_level, tokens, symbols);
   
 
@@ -151,13 +168,10 @@ void BLOCK(int lex_level, lexeme *tokens, symbol *symbols)
 void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
 {
   printf("STATEMENT\n");
-  printf("Index %d\n", tok_index);
-  printf("Reading Token: %d\n", tokens[tok_index].type);
-  printf("%s\n", tokens[tok_index].name);
-  printf("%d\n", tokens[tok_index].value);
+ 
   if(tokens[tok_index].type == identsym)
   {
-    
+    printf("Statement Identity %s\n", tokens[tok_index].name);
     //printf("Lex Level: %d\n", lex_level);
     int sym_temp = 0; 
     
@@ -190,7 +204,9 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
       
     }
     
-    tok_index++;
+    tok_index = tok_index + 2;
+    //printf("ten %d\n", tok_index);
+    
     EXPRESSION(tokens, symbols, lex_level);
     
     //Store
@@ -201,8 +217,10 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
   //CALL
   else if(tokens[tok_index].type == callsym)
   {
+    printf("CALL\n");
     int sym_temp = 0;
     tok_index++;
+    
     for(int i = 0; i < sizeof(symbols); i++)
     {
       
@@ -230,6 +248,7 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
     }
     
     tok_index++;
+    //printf("Tweleve %d\n", tok_index);
     
     emit(5, lex_level - symbols[sym_temp].level, symbols[sym_temp].val * 3);
     
@@ -245,15 +264,25 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
     BEGIN(lex_level, tokens, symbols);
     tok_index++;
     
+    printf("End of begin\n");
+    
+    
+    
+    //printf("thirteen %d\n",tok_index);
+    
     
   }
   
   //WRITE
   else if(tokens[tok_index].type == writesym)
   {
+    printf("Found write\n");
     if(tokens[tok_index].type == writesym)
     {
       tok_index++;
+      //printf("Fourteen %d\n", tok_index);
+
+      
       EXPRESSION(tokens, symbols, lex_level);
       emit(9, 0, 1);
     }
@@ -264,6 +293,9 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
   {
     printf("Found Read\n");
     tok_index++;
+     //printf("Fifteen %d\n", tok_index);
+
+    
     int sym_temp = 0;
     for(int i = 0; i < sizeof(symbols); i++)
     {
@@ -289,6 +321,8 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
     }
     
     tok_index++;
+     //printf("sixteen %d\n", tok_index);
+
     
     //RED
     emit(9, 0, 2);
@@ -298,7 +332,7 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
   
   }
   
-  //Jack is working on it
+  ///IF 
   else if(tokens[tok_index].type == ifsym)
   {
     printf("Found an if statement\n");
@@ -312,12 +346,20 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
     jpc_index = code_index;
     emit(8, 0, 0);
     tok_index++;
-    printf("if to STATEMENT\n");
+    
+    
+
     STATEMENT(lex_level, tokens, symbols);
+    
+    printf("TOKENtype %d\n", tokens[tok_index].type);
+    printf("down here\n");
     
     if(tokens[tok_index].type == elsesym) 
     {
         tok_index++;
+         //printf("eighteen %d\n", tok_index);
+
+    
         jmp_index = code_index;
         emit(7, 0, 0);
         code[jpc_index].m = code_index * 3;
@@ -327,6 +369,10 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
     
     else
         symbols[jpc_index].mark = code_index * 3;
+        
+    printf("END OF IF\n");
+    
+    //printf("After if, tok_index is %d\n", tok_index);
   
   }
   
@@ -334,9 +380,15 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
   {
     printf("Found while\n");
     tok_index++;
+     //printf("Nineteen %d\n", tok_index);
+
+    
+    
     int jmp_index = code_index;
     CONDITION(lex_level, tokens, symbols);
     tok_index++;
+     //printf("twenty %d\n", tok_index);
+
     
     int jpc_index = code_index;
     
@@ -347,6 +399,7 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
     
     //JMP
     emit(7, 0, jmp_index *3);
+    
     code[jpc_index].m = code_index;
   
   }
@@ -357,10 +410,13 @@ void STATEMENT(int lex_level, lexeme *tokens, symbol *symbols)
 //BEGIN
 void BEGIN(int lex_level, lexeme *tokens, symbol *symbols)
 {
-  
+  printf("Second Begin!\n");
+  //printf("Here %d\n", tok_index);
   if(tokens[tok_index].type == semicolonsym)
   {
+    printf("Does it trigger?\n");
     tok_index++;
+     //printf("Twentyone %d\n", tok_index);
     STATEMENT(lex_level, tokens, symbols);
     BEGIN(lex_level, tokens, symbols);
   }
@@ -374,22 +430,27 @@ void CONDITION(int lex_level, lexeme *tokens, symbol *symbols)
   if(tokens[tok_index].type == oddsym)
   {
     tok_index++;
+     //printf("twentytwo %d\n", tok_index);
+
+    
     EXPRESSION(tokens, symbols, lex_level);
     emit(2, 0, 6);
   }
   
   else
   {
-    printf("CONDITION ELSE\n");
+    printf("COMPARING\n");
     EXPRESSION(tokens, symbols, lex_level);
     int relop;
+    
+    printf("relop %d\n", tokens[tok_index].type);
     
     
     relop = tokens[tok_index].type;
     tok_index++;
+    //printf("twentythree %d\n", tok_index);
     
-    printf("%d\n", relop);
-    
+    printf("CIMP\n");
     EXPRESSION(tokens, symbols, lex_level);
     
     switch(relop)
@@ -431,6 +492,9 @@ void EXPRESSION(lexeme *tokens, symbol *symbols, int lex_level)
   {
     printf("Found Plus\n");
     tok_index++;
+     //printf("twentyfour %d\n", tok_index);
+
+    
     TERM(tokens, symbols, lex_level);
     EXPRESSION_PRIME(tokens, symbols, lex_level);
   
@@ -438,7 +502,14 @@ void EXPRESSION(lexeme *tokens, symbol *symbols, int lex_level)
   
   else if(tokens[tok_index].type == minussym)
   {
+    printf("Found minus\n");
     tok_index++;
+    
+    printf("Token name %s\n", tokens[tok_index].name);
+    
+    //printf("twentyfive %d\n", tok_index);
+
+    
     emit(2, 0, 1);
     EXPRESSION_PRIME(tokens, symbols, lex_level);
   
@@ -446,7 +517,7 @@ void EXPRESSION(lexeme *tokens, symbol *symbols, int lex_level)
   
   else
   {
-    //printf("On track\n");
+    printf("NO PLUS OR MINUS BEFORE TERM\n");
     TERM(tokens, symbols, lex_level);
     EXPRESSION_PRIME(tokens, symbols, lex_level);
   
@@ -461,9 +532,28 @@ void EXPRESSION_PRIME(lexeme *tokens, symbol *symbols, int lex_level)
   {
     printf("Found Prime Plus\n");
     tok_index++;
+     //printf("twentysix %d\n", tok_index);
+
+    
     TERM(tokens, symbols, lex_level);
+    
+    //ADD
     emit(2, 0, 2);
     EXPRESSION_PRIME(tokens, symbols, lex_level);
+  }
+  
+  if(tokens[tok_index].type == minussym)
+  {
+    printf("Found Prime Minus\n");
+    tok_index++;
+     //printf("twentyseven %d\n", tok_index);
+
+    TERM(tokens, symbols, lex_level);
+    
+    //SUB
+    emit(2, 0, 3);
+    EXPRESSION_PRIME(tokens, symbols, lex_level);
+  
   }
 
 }
@@ -476,6 +566,7 @@ void TERM(lexeme *tokens, symbol *symbols, int lex_level)
   
   printf("Activating term prime from term\n");
   TERM_PRIME(tokens, symbols, lex_level);
+
 }
 
 void TERM_PRIME(lexeme *tokens, symbol *symbols, int lex_level)
@@ -485,6 +576,9 @@ void TERM_PRIME(lexeme *tokens, symbol *symbols, int lex_level)
   {
     printf("Found termP multsym\n");
     tok_index++;
+     //printf("twentyeight %d\n", tok_index);
+
+    
     FACTOR(tokens, symbols, lex_level);
     
     emit(2, 0, 4);
@@ -493,7 +587,11 @@ void TERM_PRIME(lexeme *tokens, symbol *symbols, int lex_level)
   
   else if(tokens[tok_index].type == slashsym)
   {
+    printf("Found termP slashsym");
     tok_index++;
+     //printf("twentynine %d\n", tok_index);
+
+    
     FACTOR(tokens, symbols, lex_level);
     
     emit(2, 0, 5);
@@ -505,6 +603,9 @@ void TERM_PRIME(lexeme *tokens, symbol *symbols, int lex_level)
   {
     printf("Found MOD\n");
     tok_index++;
+     //printf("thirty %d\n", tok_index);
+
+    
     FACTOR(tokens, symbols, lex_level);
     
     emit(2, 0, 7);
@@ -517,14 +618,18 @@ void TERM_PRIME(lexeme *tokens, symbol *symbols, int lex_level)
 void FACTOR(lexeme *tokens, symbol *symbols, int lex_level)
 {
   printf("FACTOR\n");
+  
+  printf("The token index is %d\n", tok_index);
+  printf("type: %d\n", tokens[tok_index].type);
+  
   if(tokens[tok_index].type == identsym)
   {
-    printf("name: %s\n", tokens[tok_index].name);
+    
+    printf("IDENTI %s\n", tokens[tok_index].name);
     
     int temp = 0;
      for(int i = 0; i < sizeof(symbols); i++)
      {
-       //printf("HiHi\n");
         if((symbols[i].kind == 2 || symbols[i].kind == 1) && strcmp(tokens[tok_index].name, symbols[i].name) == 0 && symbols[i].mark == 0)
         {
           if(symbols[i].level == lex_level)
@@ -542,7 +647,6 @@ void FACTOR(lexeme *tokens, symbol *symbols, int lex_level)
           
           else
             continue;
-          
         }
         
         else
@@ -564,29 +668,40 @@ void FACTOR(lexeme *tokens, symbol *symbols, int lex_level)
      }
      
      tok_index++;
+      //printf("thirtyone %d\n", tok_index);
+
     
   }
   
   else if(tokens[tok_index].type == numbersym)
   {
     printf("IT'S A NUMBER\n");
-    printf("%d\n", tokens[tok_index].value);
+    printf("And it's %d\n", tokens[tok_index].value);
     emit(1, 0, tokens[tok_index].value);
     tok_index++;
     
-    printf("After getting number, the token index is %d\n", tok_index);
+    printf("Kind: %d\n", tokens[tok_index].type);
+    
+    printf("thirtytwo %d\n", tok_index);
+
   }
   
   else
   {
+    printf("Something else!!!!!!!!!!!!!\n");
     tok_index++;
+     //printf("thirtythree %d\n", tok_index);
+
+    
     EXPRESSION(tokens, symbols, lex_level);
+    printf("After SOMETHINGEXPRESSION\n");
+    
+    //May need to uncomment down below.
     tok_index++;
+    //printf("thirtyfour %d\n", tok_index);
+
   
   }
-   
-  
-  
   
 }
 
